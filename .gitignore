@@ -1,0 +1,10 @@
+carla/
+inference/
+logs/
+test/
+vqa_dataset/
+
+*.jpg
+*.png
+*.ipynb
+*.npy
