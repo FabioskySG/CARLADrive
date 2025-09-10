@@ -49,8 +49,8 @@ export ROUTES=/home/carladrive/workspace/pdm_lite/leaderboard/data/routes_traini
 
 export CHECKPOINT_ENDPOINT=${PTH_ROUTE}.json
 export TEAM_CONFIG=${PTH_ROUTE}.xml
-export PTH_LOG="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes_test/routes_training"
-export SAVE_PATH="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes_test/routes_training"
+export PTH_LOG="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes/routes_training"
+export SAVE_PATH="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes/routes_training"
 export TM_SEED=0
 export DATAGEN=1
 
