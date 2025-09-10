@@ -3,7 +3,7 @@ TAG_NAME := v1
 IMAGE_NAME := carladrive
 
 # PATH_TO_CARLADrive := /path/to/CarlaDrive
-PATH_TO_CARLADrive := /media/robesafe/SSD_Samsung_1TB/nuPDM
+PATH_TO_CARLADrive := /media/robesafe/SSD_Samsung_1TB/CARLADrive
 
 WANDB_API_KEY := $(shell echo $$WANDB_API_KEY)
 UID := $(shell id -u)
@@ -25,7 +25,7 @@ define run_docker
 		--name=$(IMAGE_NAME)_container \
 		-u $(USER_NAME) \
 		-v ./:/home/$(USER_NAME)/workspace \
-		-v $(PATH_TO_DATASET):/home/$(USER_NAME)/Datasets/CARLADrive \
+		-v $(PATH_TO_CARLADrive):/home/$(USER_NAME)/Datasets/CARLADrive \
 		-e WANDB_API_KEY=$(WANDB_API_KEY) \
 		-e DISPLAY=$(DISPLAY) \
 		-e XDG_RUNTIME_DIR=$(XDG_RUNTIME_DIR) \

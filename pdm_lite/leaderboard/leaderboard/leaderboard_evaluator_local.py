@@ -323,7 +323,7 @@ class LeaderboardEvaluator(object):
             route_string = pathlib.Path(args.routes).stem + '_'
 
             # NOTE: MOD THIS TO CHANGE NAME OF FOLDER
-            route_string += f'route{config.index+15}'
+            route_string += f'route{config.index}'
             # -----------
             
             route_date_string = route_string + '_' + '_'.join(

@@ -167,19 +167,32 @@ def filter_occluded_boxes(bboxes, depths, items, image_shape, threshold=0.8):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extend 2D bboxes from 3D labels')
-    parser.add_argument("--split", "-s", type=str, required=True, help="Path to the split")
+    parser.add_argument("--path", "-p", type=str, default="/home/carladrive/Datasets/CARLADrive/", help="Dataset Path")
     args = parser.parse_args()
 
-    dataset_path = "/home/carladrive/Datasets/CARLADrive/CARLADrive_routes/" + args.split
+    DATASET_PATH = args.path
 
-    # list all routes
-    route_names = []
-    for route in sorted(os.listdir(dataset_path)):
-        if "route" not in route:
+    # List all routes.
+    train_route_names = []
+    val_route_names = []
+    for route in sorted(os.listdir(DATASET_PATH)):
+        if "training" in route:
+            train_routes = sorted(os.listdir(os.path.join(DATASET_PATH, route)))
+        elif "validation" in route:
+            val_routes = sorted(os.listdir(os.path.join(DATASET_PATH, route)))
+
+    for tr_route in train_routes:
+        if "route" not in tr_route:
             continue
-        route_number = route.split("_")[1]
-        route_name = os.path.join(dataset_path, route)
-        route_names.append(route_name)
+        route_name = os.path.join(DATASET_PATH, "routes_training", tr_route)
+        train_route_names.append(route_name)
+    for val_route in val_routes:
+        if "route" not in val_route:
+            continue
+        route_name = os.path.join(DATASET_PATH, "routes_validation", val_route)
+        val_route_names.append(route_name)
+
+    route_names = train_route_names + val_route_names
 
     for route in route_names:
         DATAROOT = route
@@ -214,7 +227,7 @@ if __name__ == '__main__':
 
             for i, line in enumerate(labels):
                 label = line.split()
-                if len(label) == 9: # if it doesnot have 9, it already has 2d label
+                if len(label) == 9: # if it does not have 9, it already has 2d label
                     cls, w, h, l, x, y, z, yaw, _ = label
                 else:
                     cls, w, h, l, x, y, z, yaw, _ = label[:9]

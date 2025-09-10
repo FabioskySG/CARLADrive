@@ -694,10 +694,10 @@ class GlobalConfigNusc:
         # 1 / pixels_per_meter = size of pixel in meters
 
         # 2.0 for Town12 (training)
-        # self.pixels_per_meter = 2.0
+        self.pixels_per_meter = 2.0
         
         # 1.0 for Town13 (validation)
-        self.pixels_per_meter = 1.0
+        # self.pixels_per_meter = 1.0
 
         # Max number of LiDAR points per pixel in voxelized LiDAR
         self.hist_max_per_pixel = 5

@@ -5,6 +5,7 @@ scipy
 rdp
 h5py
 gym==0.26.2
+tqdm
 
 # leaderbopard requirements
 dictor

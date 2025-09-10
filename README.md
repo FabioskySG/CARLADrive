@@ -76,6 +76,13 @@ Set the desired route file in `pdm_lite/start_expert_local_base.sh`. The default
 export ROUTES=/home/carladrive/workspace/pdm_lite/leaderboard/data/routes_training.xml
 ```
 
+Additionally, change the save path for the data generated and the logs within the same file:
+
+```bash
+export PTH_LOG="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes_test/routes_training"
+export SAVE_PATH="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes_test/routes_training"
+```
+
 📷 **Sensor Suite**
 
 Modify the sensor suite or simulation parameters in `pdm_lite/team_code/config_nusc.py` (adapted from nuScenes).
@@ -90,14 +97,14 @@ DATAGEN=1
 
 in [start_expert_local_base](start_expert_local_base.sh). Otherwise, the simulation would run but no data would be stored. 
 
-Then, launch CARLA:
+Then, launch CARLA in the host in a separate terminal:
 
 ```bash
 cd pdm_lite/carla/CARLA_Leaderboard_20
 ./CarlaUE4.sh -carla-streaming-port=0 -carla-rpc-port=2000
 ```
 
-Run the expert:
+Run the expert in the container:
 
 ```bash
 cd $WORK_DIR
@@ -146,7 +153,7 @@ This generates routes in `PATH_TO_CARLADRIVE` with the following structure:
 
 🗂 **Data Formatting**
 
-Format the dataset into KITTI-like structure:
+Format the dataset into a KITTI-like structure (≈1 minute per 3,000 samples).
 
 ```bash
 python format_dataset.py -p /path/to/dataset
@@ -174,7 +181,15 @@ New folders and files per route:
 - **`points/`**: LiDAR point clouds in `.bin` format.  
 - **`radar_points/`**: radar point clouds in `.bin` format, obtained by grouping the 5 radars of the sensor suite with compensated velocities.  
 
-This scripts also filters samples where the agent collides or is hit by another agent and include those samples in `invalid_files.txt` file.
+This scripts also filters samples where the agent collides or is hit by another agent and include those samples in `invalid_files.txt` file, while registering the number of instances per class in `class_instances.txt`.
+
+**Optional: 2D Bboxes**
+
+Optionally, you can add 2D bboxes to the instances that appear in CAM_FRONT (this takes considerably more time and CAM_FRONT_INST is needed):
+
+```bash
+python extend_2d_bboxes.py -p /path/to/dataset
+```
 
 📑 **Annotations**
 
@@ -198,6 +213,10 @@ Each object instance is stored as:
 - **Yaw**: rotation around Z axis.  
 - **Num_lidar_points**: LiDAR hits on the object.  
 - **Speed (x, y)**: available for `car`, `bicycle`, and `walker`.
+
+If `extend_2d_bboxes.py` is used, the corner coordinates of bounding boxes are added to those instances in CAM_FRONT:
+
+- **2D bbox coordinates**: u_min, v_min, u_max, v_max.
 
 ---
 
