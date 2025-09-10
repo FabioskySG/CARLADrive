@@ -1,5 +1,5 @@
 """
-This script will extend the 3D labels including the 2D bboxes only for cam front.
+This script will extend the 3D labels including the 2D bboxes only for CAM FRONT.
 """
 
 import numpy as np
@@ -11,21 +11,21 @@ import argparse
 from tqdm import tqdm
 
 def get_3d_box(w, h, l, x, y, z, yaw):
-    # 8 vértices en coordenadas locales del objeto (x delante, y izquierda, z arriba)
+    # 8 vertices in local coordinates of the object (x forward, y left, z up)
     x_corners = [ l/2,  l/2, -l/2, -l/2,  l/2,  l/2, -l/2, -l/2]
     y_corners = [ w/2,  w/2,  w/2,  w/2, -w/2, -w/2, -w/2, -w/2]
-    z_corners = [ h, 0, 0, h, h, 0, 0, h]  # z=0 en la base y z=h en el techo
+    z_corners = [ h, 0, 0, h, h, 0, 0, h]  # z=0 in the base and z=h in the top
 
     corners = np.array([x_corners, y_corners, z_corners])  # shape (3, 8)
 
-    # Rotación alrededor del eje Z (yaw en radianes)
+    # Rotation around the yaw axis (Z axis in radians)
     R = np.array([
         [np.cos(yaw), -np.sin(yaw), 0],
         [np.sin(yaw),  np.cos(yaw), 0],
         [0,           0,            1]
     ])
 
-    # Aplicar rotación y traslación
+    # Apply rotation and translation
     corners_3d = R @ corners
     corners_3d += np.array([[x], [y], [z]])
     return corners_3d.T  # shape (8, 3)
@@ -44,11 +44,11 @@ def project_to_image(corners_cam, cam2img):
 def draw_box(image, img_pts, color=(0, 255, 0), thickness=2):
     img_pts = img_pts.astype(int)
 
-    # Conecta los vértices para formar las aristas
+    # Connect the vertices to form the 3D box
     connections = [
         (0, 1), (1, 2), (2, 3), (3, 0),  # base
-        (4, 5), (5, 6), (6, 7), (7, 4),  # techo
-        (0, 4), (1, 5), (2, 6), (3, 7)   # verticales
+        (4, 5), (5, 6), (6, 7), (7, 4),  # top
+        (0, 4), (1, 5), (2, 6), (3, 7)   # verticals
     ]
     
     for i, j in connections:
@@ -64,7 +64,7 @@ def get_2d_bbox_and_depth(img_pts, corners_cam):
     v_max = int(np.max(img_pts[:, 1]))
     bbox = (u_min, v_min, u_max, v_max)
 
-    # Profundidad media (Z en coordenadas cámara)
+    # Mean depth (Z in camera coordinates)
     depth = np.mean(corners_cam[:, 2])
     return bbox, depth
 
@@ -102,41 +102,40 @@ def get_cam_front_sample(label_path, calib_path, img_path, img_inst_path):
     return img, img_inst, labels, cam_front_k, lidar2cam_front, lidar2ego
 
 def compute_iou(boxA, boxB):
-    # Coordenadas del área de intersección
+    # Coordinates of the intersection area
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])
     xB = min(boxA[2], boxB[2])
     yB = min(boxA[3], boxB[3])
 
-    # Área de intersección
+    # Intersection area
     interArea = max(0, xB - xA) * max(0, yB - yA)
-    
-    # Área de cada caja
+
+    # Area of each box    
     boxAArea = (boxA[2] - boxA[0]) * (boxA[3] - boxA[1])
     boxBArea = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
     
     # IoU
-
     if boxAArea == 0 or boxBArea == 0:
         return 0.0
 
     iou = interArea / float(boxAArea + boxBArea - interArea)
     return iou
 
-# filter occlusions
+# Filter occlusions
 def filter_occluded_boxes(bboxes, depths, items, image_shape, threshold=0.8):
     """
-    bboxes: lista de (u_min, v_min, u_max, v_max)
-    depths: lista de profundidades (mismo orden que bboxes)
-    items: lista de ids de los objetos (mismo orden que bboxes)
-    image_shape: (H, W) de la imagen
-    threshold: porcentaje de oclusión permitido (0.8 = 80%)
+    bboxes: list of (u_min, v_min, u_max, v_max)
+    depths: list of depths (same order as bboxes)
+    items: list of object ids (same order as bboxes)
+    image_shape: (H, W) of the image
+    threshold: allowed occlusion percentage (0.8 = 80%)
     """
 
     H, W = image_shape
     mask = np.zeros((H, W), dtype=np.uint8)
 
-    # Ordenar por profundidad (cerca a lejos)
+    # Sort by depth (near to far)
     sorted_idx = np.argsort(depths)
     visible_boxes = []
     visible_items = []
@@ -146,12 +145,13 @@ def filter_occluded_boxes(bboxes, depths, items, image_shape, threshold=0.8):
         u_min, v_min = max(0, u_min), max(0, v_min)
         u_max, v_max = min(W - 1, u_max), min(H - 1, v_max)
 
-        # Calcular área total de la caja
+        # Calculate total area of the box
         area_total = (u_max - u_min + 1) * (v_max - v_min + 1)
         if area_total <= 0:
             continue
 
-        # Calcular área ya ocupada (ocluida) en el mask
+        # Calculate the area already occupied (occluded) in the mask
+
         mask_crop = mask[v_min:v_max + 1, u_min:u_max + 1]
         area_occluded = np.count_nonzero(mask_crop)
 
@@ -160,7 +160,7 @@ def filter_occluded_boxes(bboxes, depths, items, image_shape, threshold=0.8):
         if oclusion_ratio <= threshold:
             visible_boxes.append(idx)
             visible_items.append(items[idx])
-            # Marcar esta caja como visible
+            # Mark this box as visible
             mask[v_min:v_max + 1, u_min:u_max + 1] = 1
 
     return visible_boxes, visible_items
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     parser.add_argument("--split", "-s", type=str, required=True, help="Path to the split")
     args = parser.parse_args()
 
-    dataset_path = "/home/nupdm/Datasets/nuPDM/nuPDM_routes/" + args.split
+    dataset_path = "/home/carladrive/Datasets/CARLADrive/CARLADrive_routes/" + args.split
 
     # list all routes
     route_names = []
@@ -180,7 +180,6 @@ if __name__ == '__main__':
         route_number = route.split("_")[1]
         route_name = os.path.join(dataset_path, route)
         route_names.append(route_name)
-
 
     for route in route_names:
         DATAROOT = route
@@ -200,11 +199,10 @@ if __name__ == '__main__':
             calib_path = os.path.join(CALIB_PATH, ITEM + ".txt")
             img_path = os.path.join(CAM_FRONT_PATH, ITEM + ".jpg")
             img_inst_path = os.path.join(CAM_FRONT_INST_PATH, ITEM + ".png")
-            # print("Processing: ", label_path)
 
             img, img_inst, labels, cam_front_k, lidar2cam_front, lidar2ego = get_cam_front_sample(label_path, calib_path, img_path, img_inst_path)
 
-            ego2cam = lidar2cam_front @ np.linalg.inv(lidar2ego)  # Transformación de ego a cámara
+            ego2cam = lidar2cam_front @ np.linalg.inv(lidar2ego)  # Ego to camera transform
             cam2img = cam_front_k[:3, :]
 
             # Getting 2D bboxes from 3D labels
@@ -245,9 +243,6 @@ if __name__ == '__main__':
                 bboxes_2d_list.append(bboxes_2d)
                 depths_list.append(depths)
                 item_id_list.append(i)
-
-                # Draw 2D boxes
-                # img = draw_bbox_2d(img, bboxes_2d, color=(255, 0, 0), thickness=2)
 
             # Getting 2D bboxes from 2D CAM_FRONT_INST
             pixels = img_inst.reshape(-1, 3)
@@ -342,7 +337,6 @@ if __name__ == '__main__':
             with open(label_path, 'r') as f:
                 lines = f.readlines()
                 labels = [line.strip() for line in lines if line.strip()]
-                # maybe close?
             f.close()
 
             with open(label_path, 'w') as f:
@@ -360,23 +354,3 @@ if __name__ == '__main__':
             for idx in visible_boxes:
                 u_min, v_min, u_max, v_max = bboxes_2d_list_associated[idx]
                 img = cv2.rectangle(img, (u_min, v_min), (u_max, v_max), (0, 255, 0), 2)
-
-            # my 2d bbox is:
-
-            # show during 1 second and keep going
-
-            # cv2.imshow(ITEM, img)
-            # cv2.waitKey(2000)
-            # cv2.destroyAllWindows()
-            # save the image
-            # img_path = os.path.join(DATAROOT, "2d_gt", ITEM + ".jpg")
-            # os.makedirs(os.path.dirname(img_path), exist_ok=True)
-            # cv2.imwrite(img_path, img)
-
-
-
-
-
-
-
-

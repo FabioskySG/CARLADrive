@@ -27,8 +27,3 @@ tabulate
 matplotlib
 six
 simple-watchdog-timer
-
-# for pointpillars
-tqdm
-numba
-open3d

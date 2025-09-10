@@ -84,12 +84,15 @@ def check_collisions(route_folder: str):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Format dataset")
-    parser.add_argument("--split", "-s", type=str, default="nuPDM_routes_mini", help="Split Type")
+    # parser.add_argument("--split", "-s", type=str, default="CARLADrive_routes_mini", help="Split Type")
+    parser.add_argument("--path", "-p", type=str, default="/home/carladrive/Datasets/CARLADrive/", help="Dataset Path")
     args = parser.parse_args()
 
     config = GlobalConfigNusc()
 
-    DATASET_PATH = "/home/nupdm/Datasets/nuPDM/" + args.split
+    DATASET_PATH = args.path
+
+    # DATASET_PATH = "/home/carladrive/Datasets/CARLADrive/" + args.split
 
     # List all routes.
     train_route_names = []
@@ -209,7 +212,7 @@ if __name__ == "__main__":
             items = []
 
             # Labels format: [<object_type> <width> <height> <length> <x> <y> <z> <rotation_y> <num_points> <speed_x> <speed_y>]
-            # x, y, z are the coordinates of the center of the object
+            # x, y, z are the coordinates of the object in ego's reference frame. Z is from the ground. 
             # width, height, length are the dimensions of the object
             # rotation_y is the yaw rotation of the object
             # num_points is the number of lidar hits in the object
@@ -277,7 +280,8 @@ if __name__ == "__main__":
                                     x,             
                                     -y, 
                                     z, 
-                                    -float(box["yaw"]), 
+                                    -float(box["yaw"]),
+                                    box["num_points"],
                                     state])
                         class_dict["traffic_light"] += 1
                 elif box["class"] == "stop_sign_vqa":
@@ -459,7 +463,7 @@ if __name__ == "__main__":
         total_files += n_files
 
         # Get the random split.
-        train_files = random.sample(range(n_files), int(n_files*0.75))
+        train_files = random.sample(range(n_files), int(n_files*1))
         val_files = [i for i in range(n_files) if i not in train_files]
 
         # Order files.

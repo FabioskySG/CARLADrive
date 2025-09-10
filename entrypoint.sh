@@ -1,3 +1,3 @@
 #!/bin/bash
-source /home/nupdm/workspace/.env
+source /home/carladrive/workspace/.env
 exec bash

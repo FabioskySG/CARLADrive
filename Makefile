@@ -1,8 +1,9 @@
-USER_NAME := CARLADrive
+USER_NAME := carladrive
 TAG_NAME := v1
-IMAGE_NAME := CARLADrive
+IMAGE_NAME := carladrive
 
-PATH_TO_DATASET := /media/robesafe/SSD_Samsung_1TB/nuPDM
+# PATH_TO_CARLADrive := /path/to/CarlaDrive
+PATH_TO_CARLADrive := /media/robesafe/SSD_Samsung_1TB/nuPDM
 
 WANDB_API_KEY := $(shell echo $$WANDB_API_KEY)
 UID := $(shell id -u)

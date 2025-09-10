@@ -45,12 +45,12 @@ export TEAM_AGENT=${WORK_DIR}/team_code/data_agent.py # use autopilot.py here to
 export CHALLENGE_TRACK_CODENAME=MAP
 
 export PTH_ROUTE=${WORK_DIR}/leaderboard/data/routes_training
-export ROUTES=/home/CARLADrive/workspace/pdm_lite/leaderboard/data/routes_training.xml
+export ROUTES=/home/carladrive/workspace/pdm_lite/leaderboard/data/routes_training.xml
 
 export CHECKPOINT_ENDPOINT=${PTH_ROUTE}.json
 export TEAM_CONFIG=${PTH_ROUTE}.xml
-export PTH_LOG="/home/CARLADrive/Datasets/CARLADrive/CARLADrive_routes/routes_training"
-export SAVE_PATH="/home/CARLADrive/Datasets/CARLADrive/CARLADrive_routes/routes_training"
+export PTH_LOG="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes/routes_training"
+export SAVE_PATH="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes/routes_training"
 export TM_SEED=0
 export DATAGEN=1
 

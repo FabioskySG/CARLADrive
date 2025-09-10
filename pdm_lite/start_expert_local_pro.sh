@@ -14,7 +14,7 @@ export TEAM_CONFIG=${PTH_ROUTE}.xml
 export TM_SEED=0
 export DATAGEN=1 # void for false, else for true
 export RESUME=
-export DATA_DIR="/home/nupdm/workspace/pdm_lite/data/50x38_town_12"
+export DATA_DIR="/home/carladrive/workspace/pdm_lite/data/50x38_town_12"
 
 # Función para mostrar ayuda
 show_help() {
@@ -55,8 +55,8 @@ process_route_type() {
   echo "Procesando tipo de ruta: ${ROUTE_TYPE}"
   
   # Configurar directorios de salida específicos para este tipo de ruta
-  export PTH_LOG="/home/nupdm/Datasets/nuPDM/50x38_town_12/test/${ROUTE_TYPE}"
-  export SAVE_PATH="/home/nupdm/Datasets/nuPDM/50x38_town_12/test/${ROUTE_TYPE}"
+  export PTH_LOG="/home/carladrive/Datasets/CARLADrive/50x38_town_12/test/${ROUTE_TYPE}"
+  export SAVE_PATH="/home/carladrive/Datasets/CARLADrive/50x38_town_12/test/${ROUTE_TYPE}"
   
   # Crear directorios si no existen
   mkdir -p "${PTH_LOG}"
