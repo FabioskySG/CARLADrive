@@ -2,7 +2,7 @@ USER_NAME := carladrive
 TAG_NAME := v1
 IMAGE_NAME := carladrive
 
-PATH_TO_CARLADrive := /path/to/CarlaDrive
+PATH_TO_CARLADRIVE := /path/to/CarlaDrive
 
 WANDB_API_KEY := $(shell echo $$WANDB_API_KEY)
 UID := $(shell id -u)
@@ -24,7 +24,7 @@ define run_docker
 		--name=$(IMAGE_NAME)_container \
 		-u $(USER_NAME) \
 		-v ./:/home/$(USER_NAME)/workspace \
-		-v $(PATH_TO_CARLADrive):/home/$(USER_NAME)/Datasets/CARLADrive \
+		-v $(PATH_TO_CARLADRIVE):/home/$(USER_NAME)/Datasets/CARLADrive \
 		-e WANDB_API_KEY=$(WANDB_API_KEY) \
 		-e DISPLAY=$(DISPLAY) \
 		-e XDG_RUNTIME_DIR=$(XDG_RUNTIME_DIR) \
