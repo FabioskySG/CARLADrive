@@ -208,7 +208,7 @@ Each object instance is stored as:
   - `static_trafficwarning`  
   - `weather` (general scene information, not an object instance)
 
-- **Dimensions**: width, weight, length.
+- **Dimensions**: width, height, length.
 - **Position**: (x, y, z) in ego frame (z = ground-relative).
 - **Yaw**: rotation around Z axis.  
 - **Num_lidar_points**: LiDAR hits on the object.  
