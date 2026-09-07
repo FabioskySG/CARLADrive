@@ -2,8 +2,16 @@ carla/
 inference/
 logs/
 test/
+video/
 vqa_dataset/
 
 *.jpg
 *.ipynb
 *.npy
+__pycache__/
+*.pyc
+
+dataset_index.txt
+route_lengths_durations.png
+traffic_density_across_routes.png
+velocity_distribution_all.png
