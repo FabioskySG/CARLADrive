@@ -94,25 +94,44 @@ if __name__ == "__main__":
 
     # DATASET_PATH = "/home/carladrive/Datasets/CARLADrive/" + args.split
 
-    # List all routes.
+    # List all routes. Two supported layouts:
+    #  1. Standard: DATASET_PATH contains 'routes_training'/'routes_validation' subfolders,
+    #     each holding route_* folders (the layout produced by two separate data-generation
+    #     runs, one per routes file).
+    #  2. Flat: DATASET_PATH directly contains route_* folders, with no training/validation
+    #     split (e.g. a quick one-off run against a single custom routes file).
     train_route_names = []
     val_route_names = []
-    for route in sorted(os.listdir(DATASET_PATH)):
-        if "training" in route:
-            train_routes = sorted(os.listdir(os.path.join(DATASET_PATH, route)))
-        elif "validation" in route:
-            val_routes = sorted(os.listdir(os.path.join(DATASET_PATH, route)))
+    subdirs = sorted(d for d in os.listdir(DATASET_PATH) if os.path.isdir(os.path.join(DATASET_PATH, d)))
 
-    for tr_route in train_routes:
-        if "route" not in tr_route:
-            continue
-        route_name = os.path.join(DATASET_PATH, "routes_training", tr_route)
-        train_route_names.append(route_name)
-    for val_route in val_routes:
-        if "route" not in val_route:
-            continue
-        route_name = os.path.join(DATASET_PATH, "routes_validation", val_route)
-        val_route_names.append(route_name)
+    train_split_dir, val_split_dir = None, None
+    for route in subdirs:
+        if "training" in route:
+            train_split_dir = route
+        elif "validation" in route:
+            val_split_dir = route
+
+    if train_split_dir or val_split_dir:
+        if train_split_dir:
+            for tr_route in sorted(os.listdir(os.path.join(DATASET_PATH, train_split_dir))):
+                if "route" not in tr_route:
+                    continue
+                train_route_names.append(os.path.join(DATASET_PATH, train_split_dir, tr_route))
+        if val_split_dir:
+            for val_route in sorted(os.listdir(os.path.join(DATASET_PATH, val_split_dir))):
+                if "route" not in val_route:
+                    continue
+                val_route_names.append(os.path.join(DATASET_PATH, val_split_dir, val_route))
+    else:
+        flat_routes = [d for d in subdirs if "route" in d]
+        if not flat_routes:
+            raise SystemExit(
+                f"No routes found under {DATASET_PATH}. Expected either 'routes_training'/"
+                f"'routes_validation' subfolders, or 'route_*' folders directly inside it."
+            )
+        print(f"No routes_training/routes_validation split found under {DATASET_PATH}; "
+              f"treating all {len(flat_routes)} route folder(s) found there as a flat set.")
+        train_route_names = [os.path.join(DATASET_PATH, r) for r in flat_routes]
 
     # This dict will count the global instances of each class.
     class_dict = {

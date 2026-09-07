@@ -29,13 +29,14 @@ End-to-End Imitation Learning"](https://kashyap7x.github.io/assets/pdf/students/
 
 ## Setup
 
-Clone the repository, set up CARLA Leaderboard 2.0, and create the conda environment:
+> **Note:** This directory is a modified fork of [PDM-Lite](https://github.com/OpenDriveLab/DriveLM/tree/DriveLM-CARLA/pdm_lite) used internally by [CARLADrive](../README.md) for data generation. Follow the CARLA install and Docker setup instructions in the top-level [CARLADrive README](../README.md) first — the steps below (conda env, `PYTHONPATH`) describe the original upstream setup and are only needed if you are running this directory standalone, outside the CARLADrive Docker image.
+
+To set up CARLA Leaderboard 2.0 and create the conda environment:
 
 ```Shell
-git clone git@github.com:OpenDriveLab/DriveLM.git
-cd PDM-Lite
-chmod +x setup_pdm_lite.sh
-./setup_pdm_lite.sh
+cd pdm_lite
+chmod +x setup_carla.sh
+./setup_carla.sh
 conda env create -f environment_pdm_lite.yml
 conda activate pdm_lite
 ```
@@ -54,16 +55,15 @@ You can add these lines to your shell initialization scripts (e.g., `.bashrc` or
 
 ## Evaluation
 
-To evaluate PDM-Lite on your local machine, you only need to start a single script:
+To evaluate PDM-Lite on your local machine, you only need to start a single script (runnable from anywhere, no `cd` required). Launch CARLA separately first (e.g. `./carla/CARLA_Leaderboard_20/CarlaUE4.sh -carla-streaming-port=0 -carla-rpc-port=2000`), then:
 ```Shell
-cd $WORK_DIR
-bash start_expert_local.sh
+bash $WORK_DIR/start_expert_local_base.sh
 ```
 
-This will start the evaluation of PDM-Lite on the official devtest routes from the CARLA Leaderboard 2.0 simulator. It will run `leaderboard_evaluator_local.py` as the main Python file, which is a modified version of the original `leaderboard_evaluator.py` with additional modifications mentioned in the paper and logging functionality.
+This will start the evaluation of PDM-Lite on the routes configured in the script from the CARLA Leaderboard 2.0 simulator. It will run `leaderboard_evaluator_local.py` as the main Python file, which is a modified version of the original `leaderboard_evaluator.py` with additional modifications mentioned in the paper and logging functionality. If you'd rather have the script launch the CARLA server itself, use [start_expert_local_pro.sh](start_expert_local_pro.sh) instead.
 
-To change the route being evaluated, modify the `PTH_ROUTE` environment variable in the [start_expert_local](start_expert_local.sh) script.
-To change the location where the result file is stored, modify the `PTH_LOG` environment variable in the [start_expert_local](start_expert_local.sh) script.
+To change the route being evaluated, modify the `ROUTES`/`PTH_ROUTE` environment variables in the [start_expert_local_base.sh](start_expert_local_base.sh) script.
+To change the location where the result file is stored, modify the `PTH_LOG` environment variable in the [start_expert_local_base.sh](start_expert_local_base.sh) script.
 To debug the agent and display the actual agent forecasts, change `DEBUG_CHALLENGE` to `1`.
 
 ## Dataset
@@ -72,11 +72,10 @@ We also provide a collection of routes on the old towns [old_towns](data/old_tow
 
 ## Data Generation
 
-To generate a dataset of routes and scenarios from the CARLA Leaderboard 2.0 simulator on your local machine, change the `DATAGEN` environment variable in [start_expert_local](start_expert_local.sh) to `1` and execute the following commands:
+To generate a dataset of routes and scenarios from the CARLA Leaderboard 2.0 simulator on your local machine, make sure the `DATAGEN` environment variable in [start_expert_local_base.sh](start_expert_local_base.sh) is set to `1` (it is by default) and execute the following commands:
 
 ```Shell
-cd $WORK_DIR
-./start_expert_local.sh
+$WORK_DIR/start_expert_local_base.sh
 ```
 
 Note that generating a dataset with a single computer can be slow. For faster data generation, you should use multiple GPUs. We provide a Python script for SLURM clusters in [start_expert_slurm](start_expert_slurm.py), which works similarly to the evaluation script. Depending on the users permissions on the slurm cluster, 

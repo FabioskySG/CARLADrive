@@ -86,7 +86,7 @@ process_route_type() {
       
       echo "Ejecutando evaluación para ${ROUTE_FILE}"
       # Iniciar la evaluación para esta ruta
-      python leaderboard/leaderboard/leaderboard_evaluator_local.py --port=${PORT} --traffic-manager-port=${TM_PORT} \
+      python ${WORK_DIR}/leaderboard/leaderboard/leaderboard_evaluator_local.py --port=${PORT} --traffic-manager-port=${TM_PORT} \
         --routes=${ROUTES} --repetitions=${REPETITIONS} --track=${CHALLENGE_TRACK_CODENAME} \
         --checkpoint=${CHECKPOINT_ENDPOINT} --agent=${TEAM_AGENT} --agent-config=${TEAM_CONFIG} \
         --debug=0 --resume=${RESUME} --timeout=2000 --traffic-manager-seed=${TM_SEED}

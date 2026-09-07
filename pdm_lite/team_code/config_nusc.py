@@ -471,7 +471,6 @@ class GlobalConfigNusc:
         self.camera_back_pos = [-1.1, 0.0, 1.68]  # x, y, z mounting position of the camera
         self.camera_back_rot = [0.0, 0.0, 180.0]  # Roll Pitch Yaw of camera 0 in degree
 
-
         # CAM BACK LEFT
         self.camera_back_left_pos = [0.07, 0.5, 1.58]  # x, y, z mounting position of the camera
         self.camera_back_left_rot = [0, 0.0, 110.0]  # Roll Pitch Yaw of camera 0 in degree

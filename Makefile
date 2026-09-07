@@ -4,7 +4,6 @@ IMAGE_NAME := carladrive
 
 PATH_TO_CARLADRIVE := /path/to/CarlaDrive
 
-WANDB_API_KEY := $(shell echo $$WANDB_API_KEY)
 UID := $(shell id -u)
 GID := $(shell id -g)
 
@@ -15,7 +14,7 @@ create_entrypoint:
 	chmod +x entrypoint.sh
 
 define run_docker
-	docker run -it --rm \
+	@docker run -it --rm \
 		--net host \
 		--gpus all \
 		--ipc host \
@@ -25,10 +24,8 @@ define run_docker
 		-u $(USER_NAME) \
 		-v ./:/home/$(USER_NAME)/workspace \
 		-v $(PATH_TO_CARLADRIVE):/home/$(USER_NAME)/Datasets/CARLADrive \
-		-e WANDB_API_KEY=$(WANDB_API_KEY) \
 		-e DISPLAY=$(DISPLAY) \
 		-e XDG_RUNTIME_DIR=$(XDG_RUNTIME_DIR) \
-		--env-file .env \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		-v $(XDG_RUNTIME_DIR):$(XDG_RUNTIME_DIR) \
 		'$(IMAGE_NAME)':$(TAG_NAME) \

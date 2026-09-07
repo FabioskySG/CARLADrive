@@ -1,6 +1,6 @@
 # 🚘 *CARLADrive* 🚘
 
-The repository contains the code for generating and formatting the Dataset CARLADrive from the paper **CARLADrive: A Synthetic Multimodal Perception Dataset for Autonomous Driving** submitted to [ICRA 2026](https://2026.ieee-icra.org/).
+The repository contains the code for generating and formatting the Dataset CARLADrive from the paper **[CARLADrive: A Synthetic Multimodal Perception Dataset for Autonomous Driving](docs/CARLADrive.pdf)**, accepted at ITSC 2026.
 
 ![CARLADrive Dataset Preview](assets/preview.png)
 ![CARLADrive Dataset CAM FRONT Samples](assets/mosaic.png)
@@ -95,7 +95,7 @@ Enable data saving by setting:
 DATAGEN=1
 ```
 
-in [start_expert_local_base](start_expert_local_base.sh). Otherwise, the simulation would run but no data would be stored. 
+in [pdm_lite/start_expert_local_base.sh](pdm_lite/start_expert_local_base.sh) (it is by default). Otherwise, the simulation would run but no data would be stored.
 
 Then, launch CARLA in the host in a separate terminal:
 
@@ -104,11 +104,10 @@ cd pdm_lite/carla/CARLA_Leaderboard_20
 ./CarlaUE4.sh -carla-streaming-port=0 -carla-rpc-port=2000
 ```
 
-Run the expert in the container:
+Run the expert in the container, from the repository root (no need to `cd` into `pdm_lite`):
 
 ```bash
-cd $WORK_DIR
-./start_expert_local_base.sh
+./pdm_lite/start_expert_local_base.sh
 ```
 
 This generates routes in `PATH_TO_CARLADRIVE` with the following structure:
@@ -159,6 +158,10 @@ Format the dataset into a KITTI-like structure (≈1 minute per 3,000 samples).
 python format_dataset.py -p /path/to/dataset
 ```
 
+`/path/to/dataset` supports two layouts:
+- **Split**: the dataset path contains `routes_training`/`routes_validation` subfolders (each holding `route_*` folders), matching two separate data-generation runs — one per routes file. This is the standard layout for a full release.
+- **Flat**: the dataset path directly contains `route_*` folders with no split, useful for quickly formatting a one-off or test run (e.g. against `routes_devtest.xml`) without needing to separate training/validation.
+
 New folders and files per route:
 
 ```bash
@@ -173,7 +176,7 @@ New folders and files per route:
   |      ├──── 0000.bin
   |      └──── ...
   └──── radar_points/   # For aggrupated RADAR point clouds.
-  |      ├──── 0000.txt
+  |      ├──── 0000.bin
   |      └──── ...
   └──── invalid_files.txt
 ```
@@ -181,7 +184,7 @@ New folders and files per route:
 - **`points/`**: LiDAR point clouds in `.bin` format.  
 - **`radar_points/`**: radar point clouds in `.bin` format, obtained by grouping the 5 radars of the sensor suite with compensated velocities.  
 
-This scripts also filters samples where the agent collides or is hit by another agent and include those samples in `invalid_files.txt` file, while registering the number of instances per class in `class_instances.txt`.
+This script also filters samples where the agent collides or is hit by another agent and includes those samples in each route's `invalid_files.txt` file. It also registers the number of instances per class across the whole dataset in a single `class_instances.txt` file, written at the dataset root (i.e. `/path/to/dataset/class_instances.txt`, not per-route).
 
 **Optional: 2D Bboxes**
 
@@ -193,26 +196,41 @@ python extend_2d_bboxes.py -p /path/to/dataset
 
 📑 **Annotations**
 
-Each object instance is stored as:
+Each line in `labels/XXXX.txt` is one object instance. Most classes share a common layout, with two exceptions (`traffic_light` and `weather`) described below.
+
+Standard object instances (`car`, `walker`, `bicycle`, `stop_sign`, `static_trafficwarning`) are stored as:
 
 ```bash
-<class> <width> <height> <length> <x> <y> <z> <yaw> <num_lidar_points> <speed_x> <speed_y>
+<class> <width> <height> <length> <x> <y> <z> <yaw> <num_lidar_points> [<speed_x> <speed_y>]
 ```
-
-- **Class Types**:  
-  - `car`  
-  - `walker`  
-  - `bicycle`  
-  - `stop_sign`  
-  - `traffic_light`  
-  - `static_trafficwarning`  
-  - `weather` (general scene information, not an object instance)
 
 - **Dimensions**: width, height, length.
 - **Position**: (x, y, z) in ego frame (z = ground-relative).
-- **Yaw**: rotation around Z axis.  
-- **Num_lidar_points**: LiDAR hits on the object.  
-- **Speed (x, y)**: available for `car`, `bicycle`, and `walker`.
+- **Yaw**: rotation around Z axis.
+- **Num_lidar_points**: LiDAR hits on the object.
+- **Speed (x, y)**: only present for `car`, `bicycle`, and `walker`. `stop_sign` and `static_trafficwarning` lines end at `num_lidar_points`.
+
+`traffic_light` follows the same first 9 fields, but replaces `speed_x`/`speed_y` with a single traffic light **state**:
+
+```bash
+traffic_light <width> <height> <length> <x> <y> <z> <yaw> <num_lidar_points> <state>
+```
+where `state` is `0` (Red), `1` (Yellow), or `2` (Green).
+
+`weather` is scene-level metadata, not an object instance, and does **not** follow the layout above. It is a single line with 14 raw CARLA weather parameters:
+
+```bash
+weather <cloudiness> <dust_storm> <fog_density> <fog_distance> <fog_falloff> <mie_scattering_scale> <precipitation> <precipitation_deposits> <rayleigh_scattering_scale> <scattering_intensity> <sun_altitude_angle> <sun_azimuth_angle> <wetness> <wind_intensity>
+```
+
+- **Class Types**:
+  - `car`
+  - `walker`
+  - `bicycle`
+  - `stop_sign`
+  - `traffic_light`
+  - `static_trafficwarning`
+  - `weather` (general scene information, not an object instance)
 
 If `extend_2d_bboxes.py` is used, the corner coordinates of bounding boxes are added to those instances in CAM_FRONT:
 
@@ -220,19 +238,26 @@ If `extend_2d_bboxes.py` is used, the corner coordinates of bounding boxes are a
 
 ---
 
-## 📊 Benchmarking with MMDetection3D
+## Citation
 
-We provide a companion repository for benchmarking **CARLADrive** using popular 3D object detection models implemented in [MMDetection3D](https://github.com/open-mmlab/mmdetection3d).
+If you use CARLADrive in your research, please cite our paper:
 
-👉 [**MMDetection3D_CARLADrive**](https://github.com/FabioskySG/MMDetection3D_CARLADrive)
+```BibTeX
+@inproceedings{sanchezgarcia2026carladrive,
+  title     = {CARLADrive: A Synthetic Multimodal Perception Dataset for Autonomous Driving},
+  author    = {S{\'a}nchez-Garc{\'i}a, Fabio and Montiel-Mar{\'i}n, Santiago and Antunes-Garc{\'i}a, Miguel and Guti{\'e}rrez-Moreno, Rodrigo and Revenga, Pedro and Bergasa, Luis M.},
+  booktitle = {IEEE International Conference on Intelligent Transportation Systems (ITSC)},
+  year      = {2026},
+  note      = {To appear}
+}
+```
+> Preliminary entry from the accepted manuscript — `note`/pages/DOI will be updated once the camera-ready proceedings entry is available.
 
-This repository includes:
-- Configuration files adapted for CARLADrive.  
-- Training and evaluation pipelines.  
-- Baseline results with LiDAR-, camera-, and fusion-based models.  
+## License
 
-Use this repository if you want to **train and evaluate models on CARLADrive** and obtain metrics comparable to those reported in our paper.
+The **code** in this repository (data generation and formatting scripts) is released under the [MIT License](LICENSE), except for the vendored `pdm_lite/` directory, which keeps its own upstream Apache 2.0 license (see `pdm_lite/LICENSE`).
 
+The **CARLADrive dataset** itself is released under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — free to use and share for non-commercial, research purposes with attribution, under the same license.
 
 ## Contact
 
