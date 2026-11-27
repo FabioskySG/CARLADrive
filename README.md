@@ -1,6 +1,6 @@
 # 🚘 *CARLADrive* 🚘
 
-The repository contains the code for generating and formatting the Dataset CARLADrive from the paper **[CARLADrive: A Synthetic Multimodal Perception Dataset for Autonomous Driving](docs/CARLADrive.pdf)**, accepted at ITSC 2026.
+This repository contains the code for generating and formatting the CARLADrive dataset from the paper **CARLADrive: A Synthetic Multimodal Perception Dataset for Autonomous Driving**, accepted at ITSC 2026 (paper link coming soon).
 
 ![CARLADrive Dataset Preview](assets/preview.png)
 ![CARLADrive Dataset CAM FRONT Samples](assets/mosaic.png)
@@ -9,14 +9,32 @@ The repository contains the code for generating and formatting the Dataset CARLA
 
 ## 📥 Download
 
-The full standard version of the **CARLADrive Dataset** is (not yet) available for direct download:  
+[![DOI](https://img.shields.io/badge/DOI-10.21950%2FCMWU2T-blue)](https://doi.org/10.21950/CMWU2T)
 
-👉 [**Download CARLADrive Dataset (400 GB) (not working yet)**](https://link-to-your-dataset.com)  
+The full standard version of the **CARLADrive Dataset** (30 training + 5 validation routes, ~296 GB compressed) is publicly available at **e-cienciaDatos** (Consorcio Madroño):
 
-Example download with `wget`:
+👉 [**Download CARLADrive Dataset**](https://edatos.consorciomadrono.es/dataset.xhtml?persistentId=doi:10.21950/CMWU2T)
+
+The dataset is distributed as one `.zip` file per route, named `route_routeX_routes_{training,validation}_date_<MM_DD_HH_MM_SS>.zip`, so you can download individual routes from the web interface or all of them from the command line via the Dataverse API:
+
 ```bash
-wget -c https://link-to-your-dataset.com/carladrive_dataset.tar.gz
+DOI="doi:10.21950/CMWU2T"
+SERVER="https://edatos.consorciomadrono.es"
+
+curl -s "$SERVER/api/datasets/:persistentId/?persistentId=$DOI" \
+  | jq -r '.data.latestVersion.files[] | "\(.dataFile.id) \(.dataFile.filename)"' \
+  | while read -r id name; do
+      wget -c -O "$name" "$SERVER/api/access/datafile/$id"
+    done
 ```
+
+A single route can also be fetched directly by its file id, e.g.:
+
+```bash
+wget -c -O route_route0_routes_training.zip https://edatos.consorciomadrono.es/api/access/datafile/45729
+```
+
+Each zip extracts to a single `route_routeX_routes_{training,validation}_date_<...>/` folder that is **already formatted**: it contains both the raw simulator outputs and the KITTI-like files (`labels/`, `calib/`, `points/`, `radar_points/`, `invalid_files.txt`) described in the Usage section below. There is no need to run the data generation or `format_dataset.py` to use the released dataset; the split (training/validation) is encoded in each folder name.
 
 ---
 
@@ -60,6 +78,12 @@ Run the container:
 make run
 ```
 
+To open an additional shell in the running container:
+
+```bash
+make attach
+```
+
 ---
 
 ## ⚙️ Usage
@@ -79,8 +103,8 @@ export ROUTES=/home/carladrive/workspace/pdm_lite/leaderboard/data/routes_traini
 Additionally, change the save path for the data generated and the logs within the same file:
 
 ```bash
-export PTH_LOG="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes_test/routes_training"
-export SAVE_PATH="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes_test/routes_training"
+export PTH_LOG="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes/routes_training"
+export SAVE_PATH="/home/carladrive/Datasets/CARLADrive/CARLADrive_routes/routes_training"
 ```
 
 📷 **Sensor Suite**
@@ -110,7 +134,7 @@ Run the expert in the container, from the repository root (no need to `cd` into 
 ./pdm_lite/start_expert_local_base.sh
 ```
 
-This generates routes in `PATH_TO_CARLADRIVE` with the following structure:
+This generates one folder per route in `SAVE_PATH`. Since the Makefile mounts `PATH_TO_CARLADRIVE` (host) at `/home/carladrive/Datasets/CARLADrive` (container), the data ends up under `PATH_TO_CARLADRIVE` on the host, with the following structure:
 
 ```bash
   route_routeX/
@@ -175,7 +199,7 @@ New folders and files per route:
   └──── points/         # For LiDAR point clouds.
   |      ├──── 0000.bin
   |      └──── ...
-  └──── radar_points/   # For aggrupated RADAR point clouds.
+  └──── radar_points/   # For aggregated RADAR point clouds.
   |      ├──── 0000.bin
   |      └──── ...
   └──── invalid_files.txt
@@ -252,6 +276,25 @@ If you use CARLADrive in your research, please cite our paper:
 }
 ```
 > Preliminary entry from the accepted manuscript — `note`/pages/DOI will be updated once the camera-ready proceedings entry is available.
+
+If you use the dataset, please also cite the data deposit:
+
+```BibTeX
+@data{sanchezgarcia2026carladrive_data,
+  title     = {CARLADrive: A Synthetic Multimodal Perception Dataset for Autonomous Driving},
+  author    = {S{\'a}nchez-Garc{\'i}a, Fabio and Montiel-Mar{\'i}n, Santiago and Antunes-Garc{\'i}a, Miguel and Guti{\'e}rrez-Moreno, Rodrigo and Revenga, Pedro and Bergasa, Luis M.},
+  publisher = {e-cienciaDatos},
+  year      = {2026},
+  doi       = {10.21950/CMWU2T},
+  url       = {https://doi.org/10.21950/CMWU2T}
+}
+```
+
+## Acknowledgements
+
+Data is collected with [PDM-Lite](https://github.com/OpenDriveLab/DriveLM/tree/DriveLM-CARLA/pdm_lite) (vendored in `pdm_lite/`, Apache 2.0) on the [CARLA](https://carla.org/) simulator (Leaderboard 2.0 package). We thank their authors for making their work publicly available.
+
+This work was supported by the Spanish Ministry MICIU/AEI/10.13039/501100011033 (projects PID2021-126623OB-I00 and PID2024-161576OB-I00, the latter co-funded by the European Regional Development Fund, "A way of making Europe"), by project PLEC2023-010343 (INARTRANS 4.0, MICIU/AEI/10.13039/501100011033), by the iRoboCity2030-CM project (grant TEC-2024/TEC-62) awarded by the Community of Madrid, and by the ELLIS Unit Madrid.
 
 ## License
 
